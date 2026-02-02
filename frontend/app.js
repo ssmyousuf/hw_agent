@@ -125,8 +125,14 @@ function removeFile(index) {
         filePreview.innerHTML = '';
         statsSection.style.display = 'none';
         disableChat();
+        // Notify user that they need to re-upload
+        uploadStatus.innerText = '🔄 Files cleared. Upload new statements to continue.';
+        uploadStatus.style.color = '#fbbf24';
     } else {
         updateFilePreview(uploadedFiles, currentStats.rows);
+        // Note: Server still has the combined data until new upload
+        uploadStatus.innerText = `ℹ️ Removed locally. Server data unchanged until re-upload.`;
+        uploadStatus.style.color = '#60a5fa';
     }
 }
 

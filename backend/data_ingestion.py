@@ -57,7 +57,7 @@ def parse_pdf(filepath: str, password: str = None) -> pd.DataFrame:
         for page_num, page in enumerate(reader.pages):
             try:
                 text = page.extract_text()
-            except:
+            except Exception:
                 continue 
                 
             if not text: continue
@@ -91,8 +91,8 @@ def parse_pdf(filepath: str, password: str = None) -> pd.DataFrame:
                         # Try parsing with dateutil (handles many formats)
                         parsed_date = dateutil.parser.parse(date_str, dayfirst=True)
                         iso_date = parsed_date.strftime('%Y-%m-%d')
-                    except:
-                        iso_date = date_str # Fallback
+                    except Exception:
+                        iso_date = date_str  # Fallback
                         
                     # Description is everything in between
                     date_end_idx = date_match.end()
@@ -117,7 +117,7 @@ def parse_pdf(filepath: str, password: str = None) -> pd.DataFrame:
                                 "amount": amount_val,
                                 "category": categorize_merchant(description)
                             })
-                        except:
+                        except Exception:
                             pass
         
         # Write debug log

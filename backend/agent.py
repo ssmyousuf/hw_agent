@@ -156,7 +156,7 @@ class LocalAgent:
                             }]
                             # Important: Replace content in the actual message dictionary
                             message["content"] = "" 
-                    except:
+                    except Exception:
                         pass
                 
                 # 3. Nudge if the model is talking about tools but didn't output valid JSON
@@ -206,7 +206,7 @@ class LocalAgent:
                 
                 try:
                     args = json.loads(args_str)
-                except:
+                except Exception:
                     args = {}
                 
                 # Sanitize

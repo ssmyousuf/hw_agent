@@ -1,9 +1,9 @@
+from typing import List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from pydantic import BaseModel
-from backend.data_ingestion import load_statement
+from backend.data_ingestion import load_statement, categorize_merchant
 from backend.mcp_server import set_dataframe
 from backend.agent import agent_instance
-import shutil
 import os
 import pandas as pd
 
@@ -12,7 +12,6 @@ app = FastAPI()
 class ChatRequest(BaseModel):
     message: str
 
-from typing import List
 
 @app.post("/upload")
 async def upload_files(files: List[UploadFile] = File(...), password: str = Form(None)):
