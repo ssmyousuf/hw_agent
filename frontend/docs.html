@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Architecture & Learning Guide</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --accent: #8b5cf6;
+            --warning: #f59e0b;
+            --code-bg: #1e1e1e;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Navigation */
+        nav {
+            position: sticky;
+            top: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            margin-bottom: 2rem;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        h1 {
+            font-size: 3rem;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+            margin-top: 3rem;
+            color: var(--primary);
+            scroll-margin-top: 100px;
+        }
+
+        h3 {
+            color: var(--accent);
+            margin-top: 2rem;
+        }
+
+        .section {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .section:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .section:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .section:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .section:nth-child(5) {
+            animation-delay: 0.4s;
+        }
+
+        .section:nth-child(6) {
+            animation-delay: 0.5s;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: var(--code-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            border-left: 4px solid var(--primary);
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+
+        .inline-code {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            color: var(--primary);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        /* Diagrams */
+        .diagram-container {
+            position: relative;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+
+        .hld-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .module {
+            background: var(--bg-dark);
+            border: 2px solid var(--primary);
+            color: var(--text-main);
+            padding: 1.5rem;
+            border-radius: 12px;
+            width: 180px;
+            text-align: center;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+
+        .module:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+            border-color: var(--accent);
+        }
+
+        .module-icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .data-stream {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, var(--success), transparent);
+            width: 100px;
+            top: 50%;
+            z-index: 1;
+        }
+
+        .anim-1 {
+            animation: flowMove 2s infinite linear;
+            left: 200px;
+            width: 150px;
+        }
+
+        .anim-2 {
+            animation: flowMove 2s infinite linear 1s;
+            left: 550px;
+            width: 150px;
+        }
+
+        @keyframes flowMove {
+            0% {
+                transform: translateX(0);
+                opacity: 0;
+            }
+
+            30% {
+                opacity: 1;
+            }
+
+            70% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateX(200px);
+                opacity: 0;
+            }
+        }
+
+        /* Learning Boxes */
+        .learning-box {
+            background: rgba(139, 92, 246, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .tip-box {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid var(--success);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--warning);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--primary);
+            border-radius: 99px;
+            font-size: 0.8rem;
+            margin: 0.25rem;
+        }
+
+        ul,
+        ol {
+            line-height: 1.8;
+        }
+
+        li {
+            margin: 0.5rem 0;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: var(--primary);
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .back-link:hover {
+            transform: translateX(-5px);
+        }
+
+        /* Flow Diagrams */
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            opacity: 0;
+            animation: slideInFromLeft 0.5s ease-out forwards;
+        }
+
+        .highlight-step {
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .success-step {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .step-number {
+            background: var(--primary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content strong {
+            display: block;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .step-content p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: var(--success);
+            margin: 0.5rem 0;
+            animation: pulse 2s infinite;
+        }
+
+        .loop-arrow {
+            color: var(--accent);
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Sequence Diagram */
+        .sequence-diagram {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+            min-height: 500px;
+        }
+
+        .sequence-actor {
+            display: inline-block;
+            width: 25%;
+            text-align: center;
+        }
+
+        .actor-box {
+            background: var(--bg-dark);
+            border: 2px solid var(--primary);
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .sequence-messages {
+            margin-top: 3rem;
+            position: relative;
+        }
+
+        .seq-msg {
+            position: relative;
+            height: 50px;
+            opacity: 0;
+            animation: fadeInMessage 0.5s ease-out forwards;
+        }
+
+        .msg-line {
+            position: absolute;
+            height: 2px;
+            background: var(--primary);
+            top: 25px;
+        }
+
+        .return-line {
+            background: var(--success);
+            border-top: 2px dashed var(--success);
+        }
+
+        .msg-text {
+            position: absolute;
+            top: 0;
+            background: var(--bg-card);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        @keyframes fadeInMessage {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Pipeline Diagram */
+        .pipeline-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            margin: 2rem 0;
+            overflow-x: auto;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .pipeline-stage {
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            min-width: 120px;
+            opacity: 0;
+            animation: popIn 0.5s ease-out forwards;
+        }
+
+        .success-stage {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .stage-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stage-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stage-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .pipeline-connector {
+            font-size: 2rem;
+            color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Loop Diagram */
+        .loop-diagram {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .loop-start {
+            background: var(--bg-dark);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            max-width: 300px;
+            margin: 0 auto 2rem;
+        }
+
+        .loop-start strong {
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .loop-start p {
+            margin: 0.5rem 0 0 0;
+            color: var(--text-muted);
+        }
+
+        .loop-iteration {
+            border: 3px dashed var(--accent);
+            border-radius: 12px;
+            padding: 2rem;
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .iteration-header {
+            text-align: center;
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .loop-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .loop-step {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 8px;
+            opacity: 0;
+            animation: slideInFromLeft 0.5s ease-out forwards;
+        }
+
+        .step-badge {
+            background: var(--primary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .decision-box {
+            margin-top: 1rem;
+            opacity: 0;
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .decision-diamond {
+            background: var(--warning);
+            color: var(--bg-dark);
+            padding: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            width: 150px;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .decision-paths {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .path-yes,
+        .path-no {
+            background: var(--bg-dark);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .path-label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .path-yes .path-label {
+            color: var(--success);
+        }
+
+        .path-no .path-label {
+            color: var(--text-muted);
+        }
+
+        .path-action {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .path-loop {
+            color: var(--accent);
+            text-align: center;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .path-end {
+            color: var(--success);
+            text-align: center;
+            font-weight: 600;
+            margin-top: 1rem;
+            font-size: 1.2rem;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .pipeline-diagram {
+                flex-direction: column;
+            }
+
+            .pipeline-connector {
+                transform: rotate(90deg);
+            }
+
+            .decision-paths {
+                grid-template-columns: 1fr;
+            }
+
+            .sequence-actor {
+                width: 50%;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#architecture">Architecture</a></li>
+            <li><a href="#agents">Agents</a></li>
+            <li><a href="#tools">Tools</a></li>
+            <li><a href="#debugger">Visual Debugger</a></li>
+            <li><a href="#search">Enhanced Search</a></li>
+            <li><a href="#performance">Performance</a></li>
+            <li><a href="#mcp">MCP</a></li>
+            <li><a href="#implementation">Implementation</a></li>
+            <li><a href="#diagrams">Flow Diagrams</a></li>
+            <li><a href="#learn">Learn More</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <header>
+            <div class="tag">EDUCATIONAL DOCUMENTATION</div>
+            <h1>🤖 AI Agent Architecture & Programming Guide</h1>
+            <p>Learn how to build intelligent, tool-using AI agents</p>
+        </header>
+
+        <!-- Overview -->
+        <div class="section" id="overview">
+            <h2>📚 What You'll Learn</h2>
+            <p>This documentation serves as both a technical reference and a learning resource for understanding AI
+                agents and agent programming.</p>
+
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                    <h4 style="margin-top: 0; color: var(--primary);">🏗️ Architecture</h4>
+                    <p style="font-size: 0.9rem;">How this agent is structured and why</p>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                    <h4 style="margin-top: 0; color: var(--success);">🛠️ Tool Calling</h4>
+                    <p style="font-size: 0.9rem;">How LLMs execute functions</p>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                    <h4 style="margin-top: 0; color: var(--accent);">🔌 MCP Protocol</h4>
+                    <p style="font-size: 0.9rem;">Model Context Protocol explained</p>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                    <h4 style="margin-top: 0; color: var(--warning);">💻 Code Examples</h4>
+                    <p style="font-size: 0.9rem;">Real implementation patterns</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Architecture -->
+        <div class="section" id="architecture">
+            <h2>🏗️ High Level Architecture</h2>
+
+            <div class="diagram-container">
+                <div class="hld-diagram">
+                    <div class="module">
+                        <span class="module-icon">💻</span>
+                        Frontend UI<br>
+                        <span style="font-size:0.8rem; color:var(--text-muted)">(HTML/JS)</span>
+                    </div>
+
+                    <div class="data-stream anim-1"></div>
+
+                    <div class="module">
+                        <span class="module-icon">⚙️</span>
+                        API Server<br>
+                        <span style="font-size:0.8rem; color:var(--text-muted)">(FastAPI)</span>
+                    </div>
+
+                    <div class="data-stream anim-2"></div>
+
+                    <div class="module">
+                        <span class="module-icon">🧠</span>
+                        AI Agent<br>
+                        <span style="font-size:0.8rem; color:var(--text-muted)">(Llama 3.2)</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Component Breakdown</h3>
+            <ol>
+                <li><strong>Frontend (HTML/CSS/JS):</strong> User interface for file upload and chat</li>
+                <li><strong>Backend (FastAPI):</strong> REST API handling requests and file processing</li>
+                <li><strong>Data Ingestion:</strong> PDF/CSV parsing with regex and pandas</li>
+                <li><strong>AI Agent:</strong> LLM with tool-calling capabilities</li>
+                <li><strong>MCP Server:</strong> Tool definitions and execution</li>
+            </ol>
+
+            <div class="tip-box">
+                <strong>💡 Design Principle:</strong> This is a <strong>local-first</strong> architecture. All data
+                stays on your machine. The LLM runs locally using llama-cpp-python, ensuring complete privacy.
+            </div>
+        </div>
+
+        <!-- What are Agents -->
+        <div class="section" id="agents">
+            <h2>🤖 What are AI Agents?</h2>
+
+            <div class="learning-box">
+                <h3 style="margin-top: 0;">Definition</h3>
+                <p>An <strong>AI Agent</strong> is a language model that can:</p>
+                <ul>
+                    <li>Understand natural language queries</li>
+                    <li><strong>Call tools/functions</strong> to gather information</li>
+                    <li>Reason about the results</li>
+                    <li>Provide human-friendly answers</li>
+                </ul>
+            </div>
+
+            <h3>Agent vs. Chatbot</h3>
+            <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                <tr style="background: rgba(0,0,0,0.3);">
+                    <th style="padding: 1rem; text-align: left; border: 1px solid var(--border);">Chatbot</th>
+                    <th style="padding: 1rem; text-align: left; border: 1px solid var(--border);">Agent</th>
+                </tr>
+                <tr>
+                    <td style="padding: 1rem; border: 1px solid var(--border);">Only generates text</td>
+                    <td style="padding: 1rem; border: 1px solid var(--border);"><strong>Executes actions</strong> via
+                        tools</td>
+                </tr>
+                <tr>
+                    <td style="padding: 1rem; border: 1px solid var(--border);">Limited to training data</td>
+                    <td style="padding: 1rem; border: 1px solid var(--border);"><strong>Accesses real-time data</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 1rem; border: 1px solid var(--border);">Single-turn responses</td>
+                    <td style="padding: 1rem; border: 1px solid var(--border);"><strong>Multi-turn reasoning</strong>
+                    </td>
+                </tr>
+            </table>
+
+            <h3>Example: How This Agent Works</h3>
+            <pre><code>User: "How much did I spend on food?"
+
+Agent Reasoning:
+1. Understands: User wants food spending total
+2. Calls Tool: read_transactions(category="Food & Dining")
+3. Receives: {"Food & Dining": -5400}
+4. Synthesizes: "You spent ₹5,400 on food."</code></pre>
+        </div>
+
+        <!-- Tool Calling -->
+        <div class="section" id="tools">
+            <h2>🛠️ Tool Calling Mechanism</h2>
+
+            <h3>How LLMs Call Functions</h3>
+            <p>Modern LLMs like GPT-4, Claude, and Llama can output <strong>structured JSON</strong> to request function
+                execution.</p>
+
+            <div class="learning-box">
+                <h4 style="margin-top: 0;">The Tool-Calling Loop</h4>
+                <ol>
+                    <li><strong>Define Tools:</strong> Provide JSON schema describing available functions</li>
+                    <li><strong>User Query:</strong> Send user's question to LLM</li>
+                    <li><strong>LLM Decides:</strong> Model outputs tool call JSON or text</li>
+                    <li><strong>Execute Tool:</strong> Your code runs the function</li>
+                    <li><strong>Return Results:</strong> Send tool output back to LLM</li>
+                    <li><strong>Final Answer:</strong> LLM synthesizes human response</li>
+                </ol>
+            </div>
+
+            <h3>Tool Schema Example</h3>
+            <pre><code>{
+  "type": "function",
+  "function": {
+    "name": "read_transactions",
+    "description": "Search credit card transactions",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "start_date": {"type": "string"},
+        "category": {"type": "string"}
+      }
+    }
+  }
+}</code></pre>
+
+            <h3>LLM Output (Tool Call)</h3>
+            <pre><code>{
+  "name": "read_transactions",
+  "parameters": {
+    "category": "Food & Dining",
+    "start_date": "2025-01-01"
+  }
+}</code></pre>
+
+            <div class="warning-box">
+                <strong>⚠️ Challenge:</strong> Smaller models (like Llama 3.2 3B) sometimes output raw JSON instead of
+                calling tools properly. This agent implements a <strong>recursive loop</strong> to extract and execute
+                JSON even when embedded in text.
+            </div>
+        </div>
+
+        <!-- MCP Protocol -->
+        <div class="section" id="mcp">
+            <h2>🔌 Model Context Protocol (MCP)</h2>
+
+            <div class="learning-box">
+                <h3 style="margin-top: 0;">What is MCP?</h3>
+                <p>MCP is a <strong>standardized protocol</strong> for connecting AI models to external tools and data
+                    sources. Think of it as a "USB standard" for AI agents.</p>
+            </div>
+
+            <h3>Why MCP?</h3>
+            <ul>
+                <li><strong>Standardization:</strong> One protocol for all tools</li>
+                <li><strong>Discoverability:</strong> Tools self-describe their capabilities</li>
+                <li><strong>Type Safety:</strong> JSON schemas ensure correct parameters</li>
+                <li><strong>Composability:</strong> Mix and match tools from different sources</li>
+            </ul>
+
+            <h3>MCP in This Project</h3>
+            <p>We use <span class="inline-code">mcp-server-python</span> to define tools:</p>
+            <pre><code>from mcp.server import Server
+
+mcp = Server("credit-card-agent")
+
+@mcp.tool()
+def read_transactions(category: str = None) -> str:
+    """Search for transactions by category"""
+    # Filter dataframe
+    return results</code></pre>
+            <div class="tip-box">
+                <strong>💡 Learn More:</strong> Visit <a href="https://modelcontextprotocol.io" target="_blank"
+                    style="color: var(--success);">modelcontextprotocol.io</a> for the full MCP specification.
+            </div>
+        </div>
+
+        <!-- Visual Debugger Section -->
+        <div class="section">
+            <h2 id="debugger">🐞 Visual Debugger</h2>
+            <p>The Visual Debugger provides real-time insight into the agent's reasoning process, allowing you to
+                inspect every step of execution.</p>
+
+            <h3>Features</h3>
+            <ul>
+                <li><strong>Brain Logs Console</strong>: Toggle the debug panel using the 🐞 Debug Mode button in Quick
+                    Actions</li>
+                <li><strong>Step-by-Step Execution</strong>: See each reasoning step, tool call, and result</li>
+                <li><strong>Tool Call Inspection</strong>: View exact parameters passed to each tool</li>
+                <li><strong>Error Tracking</strong>: Identify where and why failures occur</li>
+            </ul>
+
+            <h3>Log Types</h3>
+            <div class="code-block">
+                <div class="code-header">Debug Log Categories</div>
+                <pre><code>⚙️  System    - Query received, context setup
+🛠️  Tool Call - Function invocation with parameters
+✅  Result    - Data returned from tools
+🏁  Success   - Final response generated
+⚠️  Warning   - Duplicate calls, optimizations
+❌  Error     - Parsing or execution failures</code></pre>
+            </div>
+
+            <h3>Usage</h3>
+            <ol>
+                <li>Click the <strong>🐞 Debug Mode</strong> button in Quick Actions</li>
+                <li>Ask a question (e.g., "What are my top 5 expenses?")</li>
+                <li>Watch the agent's thought process unfold in real-time</li>
+                <li>Inspect tool calls to understand data retrieval</li>
+            </ol>
+        </div>
+
+        <!-- Enhanced Search Section -->
+        <div class="section">
+            <h2 id="search">🔍 Enhanced Search</h2>
+            <p>The agent supports intelligent keyword search across both categories and merchant names.</p>
+
+            <h3>Search Capabilities</h3>
+            <ul>
+                <li><strong>Category Search</strong>: "Show me all Food expenses"</li>
+                <li><strong>Merchant Search</strong>: "What did I buy from Amazon?"</li>
+                <li><strong>Partial Matching</strong>: "Uber" matches "UBER TRIP", "UBER EATS"</li>
+                <li><strong>Case-Insensitive</strong>: Works with any capitalization</li>
+            </ul>
+
+            <h3>Example Queries</h3>
+            <div class="code-block">
+                <div class="code-header">Natural Language Queries</div>
+                <pre><code>// Category-based
+"What did I spend on Entertainment?"
+"Show me all Shopping transactions"
+
+// Merchant-based
+"How much did I spend at Zomato?"
+"List all transactions from Netflix"
+
+// Combined
+"Show me Food expenses over ₹500"
+"What are my Uber rides this month?"</code></pre>
+            </div>
+        </div>
+
+        <!-- Performance Section -->
+        <div class="section">
+            <h2 id="performance">⚡ Performance & Optimization</h2>
+            <p>The agent is optimized for efficient operation with large datasets and long conversations.</p>
+
+            <h3>Memory Management</h3>
+            <ul>
+                <li><strong>Context Window Optimization</strong>: Automatically truncates old conversation history</li>
+                <li><strong>Smart Truncation</strong>: Keeps system prompt + last 8 messages (4 turns)</li>
+                <li><strong>Tool Output Limiting</strong>: Large results are summarized to prevent overflow</li>
+            </ul>
+
+            <h3>File Handling</h3>
+            <ul>
+                <li><strong>Multiple Files</strong>: Upload and merge multiple CSV/PDF statements</li>
+                <li><strong>Case-Insensitive Extensions</strong>: Accepts .csv, .CSV, .pdf, .PDF</li>
+                <li><strong>Detailed Error Messages</strong>: Specific feedback when parsing fails</li>
+            </ul>
+
+            <h3>Limits</h3>
+            <div class="code-block">
+                <div class="code-header">System Constraints</div>
+                <pre><code>Context Window:    4096 tokens
+Tool Output:       1200 chars max (truncated)
+Conversation:      Last 8 messages retained
+Max Iterations:    5 reasoning steps per query</code></pre>
+            </div>
+        </div>
+
+        <!-- Implementation Details -->
+        <div class="section" id="implementation">
+            <h2>💻 Implementation Deep Dive</h2>
+
+            <h3>1. Agent Core Logic</h3>
+            <p>Located in <span class="inline-code">backend/agent.py</span></p>
+
+            <pre><code>class LocalAgent:
+    def chat(self, user_query: str):
+        # Recursive loop (max 5 turns)
+        for i in range(5):
+            response = self.llm.create_chat_completion(
+                messages=messages,
+                tools=TOOLS_SCHEMA
+            )
+            
+            # Extract tool calls (native or from content)
+            tool_calls = self._extract_tools(response)
+            
+            if tool_calls:
+                # Execute and continue loop
+                results = self._execute_tools(tool_calls)
+                messages.append(results)
+            else:
+                # Final answer
+                return response["content"]</code></pre>
+
+            <h3>2. Tool Execution</h3>
+            <p>Tools are defined in <span class="inline-code">backend/mcp_server.py</span></p>
+
+            <pre><code>@mcp.tool()
+def summarize_spending(group_by: str = "category") -> str:
+    global current_df
+    
+    if group_by == "category":
+        summary = current_df.groupby("category")["amount"].sum()
+    elif group_by == "month":
+        summary = current_df.groupby("month")["amount"].sum()
+    
+    return summary.to_dict()</code></pre>
+
+            <h3>3. Data Ingestion</h3>
+            <p>PDF parsing with regex in <span class="inline-code">backend/data_ingestion.py</span></p>
+
+            <pre><code>def parse_pdf(filepath: str) -> pd.DataFrame:
+    # Extract text from PDF
+    reader = pypdf.PdfReader(filepath)
+    
+    # Regex patterns for date, amount, description
+    date_pattern = r'(\d{2}/\d{2}/\d{4})'
+    amount_pattern = r'([\d,]+\.\d{2})\s*(CR|DR)?'
+    
+    # Parse and normalize dates
+    parsed_date = dateutil.parser.parse(date_str)
+    iso_date = parsed_date.strftime('%Y-%m-%d')
+    
+    return pd.DataFrame(transactions)</code></pre>
+
+            <h3>Key Design Patterns</h3>
+            <div style="display: grid; gap: 1rem; margin-top: 1rem;">
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                    <strong>🔄 Recursive Tool Calling:</strong> Loop until LLM provides final answer
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                    <strong>🧹 Argument Sanitization:</strong> Filter tool parameters to prevent errors
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                    <strong>📅 Date Normalization:</strong> Convert all dates to ISO format (YYYY-MM-DD)
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                    <strong>🎯 Deduplication:</strong> Prevent calling the same tool twice in one session
+                </div>
+            </div>
+        </div>
+
+        <!-- Animated Flow Diagrams -->
+        <div class="section" id="flow-diagrams">
+            <h2>🎬 Animated Flow Diagrams</h2>
+
+            <h3>1. Complete Request Flow</h3>
+            <div class="flow-container">
+                <div class="flow-step" style="animation-delay: 0s;">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <strong>User Input</strong>
+                        <p>"Show my food spending"</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="flow-step" style="animation-delay: 0.5s;">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <strong>Frontend</strong>
+                        <p>POST /chat with message</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="flow-step" style="animation-delay: 1s;">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <strong>Agent.chat()</strong>
+                        <p>Receives query, loads context</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="flow-step highlight-step" style="animation-delay: 1.5s;">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <strong>LLM Reasoning</strong>
+                        <p>Decides to call read_transactions</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="flow-step" style="animation-delay: 2s;">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <strong>Tool Execution</strong>
+                        <p>Filters DataFrame for "Food"</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="flow-step" style="animation-delay: 2.5s;">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <strong>Results Return</strong>
+                        <p>{"Food & Dining": -5400}</p>
+                    </div>
+                </div>
+                <div class="flow-arrow loop-arrow">↻</div>
+
+                <div class="flow-step highlight-step" style="animation-delay: 3s;">
+                    <div class="step-number">7</div>
+                    <div class="step-content">
+                        <strong>LLM Synthesis</strong>
+                        <p>Generates human response</p>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+
+                <div class="flow-step success-step" style="animation-delay: 3.5s;">
+                    <div class="step-number">8</div>
+                    <div class="step-content">
+                        <strong>Response</strong>
+                        <p>"You spent ₹5,400 on food"</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>2. Tool-Calling Sequence (Detailed)</h3>
+            <div class="sequence-diagram">
+                <div class="sequence-actor">
+                    <div class="actor-box">User</div>
+                </div>
+                <div class="sequence-actor">
+                    <div class="actor-box">Agent</div>
+                </div>
+                <div class="sequence-actor">
+                    <div class="actor-box">LLM</div>
+                </div>
+                <div class="sequence-actor">
+                    <div class="actor-box">Tool</div>
+                </div>
+
+                <div class="sequence-messages">
+                    <div class="seq-msg" style="animation-delay: 0s;">
+                        <div class="msg-line" style="left: 12.5%; width: 25%;"></div>
+                        <div class="msg-text" style="left: 25%;">Query: "Total spending?"</div>
+                    </div>
+
+                    <div class="seq-msg" style="animation-delay: 0.8s;">
+                        <div class="msg-line" style="left: 37.5%; width: 25%;"></div>
+                        <div class="msg-text" style="left: 50%;">System Prompt + Tools</div>
+                    </div>
+
+                    <div class="seq-msg return" style="animation-delay: 1.6s;">
+                        <div class="msg-line return-line" style="left: 37.5%; width: 25%;"></div>
+                        <div class="msg-text" style="left: 50%;">Tool Call JSON</div>
+                    </div>
+
+                    <div class="seq-msg" style="animation-delay: 2.4s;">
+                        <div class="msg-line" style="left: 37.5%; width: 50%;"></div>
+                        <div class="msg-text" style="left: 75%;">Execute(params)</div>
+                    </div>
+
+                    <div class="seq-msg return" style="animation-delay: 3.2s;">
+                        <div class="msg-line return-line" style="left: 37.5%; width: 50%;"></div>
+                        <div class="msg-text" style="left: 75%;">Results: {...}</div>
+                    </div>
+
+                    <div class="seq-msg" style="animation-delay: 4s;">
+                        <div class="msg-line" style="left: 37.5%; width: 25%;"></div>
+                        <div class="msg-text" style="left: 50%;">Results + "Synthesize"</div>
+                    </div>
+
+                    <div class="seq-msg return" style="animation-delay: 4.8s;">
+                        <div class="msg-line return-line" style="left: 37.5%; width: 25%;"></div>
+                        <div class="msg-text" style="left: 50%;">Natural Language</div>
+                    </div>
+
+                    <div class="seq-msg return" style="animation-delay: 5.6s;">
+                        <div class="msg-line return-line" style="left: 12.5%; width: 25%;"></div>
+                        <div class="msg-text" style="left: 25%;">Display Response</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>3. PDF Parsing Pipeline</h3>
+            <div class="pipeline-diagram">
+                <div class="pipeline-stage" style="animation-delay: 0s;">
+                    <div class="stage-icon">📄</div>
+                    <div class="stage-title">PDF Upload</div>
+                    <div class="stage-desc">User drops file</div>
+                </div>
+                <div class="pipeline-connector">→</div>
+
+                <div class="pipeline-stage" style="animation-delay: 0.6s;">
+                    <div class="stage-icon">🔓</div>
+                    <div class="stage-title">Decrypt</div>
+                    <div class="stage-desc">If password provided</div>
+                </div>
+                <div class="pipeline-connector">→</div>
+
+                <div class="pipeline-stage" style="animation-delay: 1.2s;">
+                    <div class="stage-icon">📝</div>
+                    <div class="stage-title">Extract Text</div>
+                    <div class="stage-desc">PyPDF reader</div>
+                </div>
+                <div class="pipeline-connector">→</div>
+
+                <div class="pipeline-stage" style="animation-delay: 1.8s;">
+                    <div class="stage-icon">🔍</div>
+                    <div class="stage-title">Regex Match</div>
+                    <div class="stage-desc">Date, Amount, Desc</div>
+                </div>
+                <div class="pipeline-connector">→</div>
+
+                <div class="pipeline-stage" style="animation-delay: 2.4s;">
+                    <div class="stage-icon">📅</div>
+                    <div class="stage-title">Normalize Dates</div>
+                    <div class="stage-desc">DD/MM → YYYY-MM-DD</div>
+                </div>
+                <div class="pipeline-connector">→</div>
+
+                <div class="pipeline-stage" style="animation-delay: 3s;">
+                    <div class="stage-icon">🏷️</div>
+                    <div class="stage-title">Categorize</div>
+                    <div class="stage-desc">Rule-based matching</div>
+                </div>
+                <div class="pipeline-connector">→</div>
+
+                <div class="pipeline-stage success-stage" style="animation-delay: 3.6s;">
+                    <div class="stage-icon">📊</div>
+                    <div class="stage-title">DataFrame</div>
+                    <div class="stage-desc">Ready for analysis</div>
+                </div>
+            </div>
+
+            <h3>4. Recursive Reasoning Loop</h3>
+            <div class="loop-diagram">
+                <div class="loop-start">
+                    <strong>Start</strong>
+                    <p>User Query</p>
+                </div>
+
+                <div class="loop-iteration">
+                    <div class="iteration-header">Iteration 1-5</div>
+                    <div class="loop-steps">
+                        <div class="loop-step" style="animation-delay: 0s;">
+                            <span class="step-badge">A</span>
+                            <span>Send to LLM</span>
+                        </div>
+                        <div class="loop-step" style="animation-delay: 0.5s;">
+                            <span class="step-badge">B</span>
+                            <span>Check Response</span>
+                        </div>
+                        <div class="decision-box" style="animation-delay: 1s;">
+                            <div class="decision-diamond">
+                                <span>Tool Call?</span>
+                            </div>
+                            <div class="decision-paths">
+                                <div class="path-yes">
+                                    <span class="path-label">YES</span>
+                                    <div class="path-action">Execute Tool</div>
+                                    <div class="path-action">Append Results</div>
+                                    <div class="path-loop">↻ Continue Loop</div>
+                                </div>
+                                <div class="path-no">
+                                    <span class="path-label">NO</span>
+                                    <div class="path-action">Return Response</div>
+                                    <div class="path-end">✓ Done</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip-box" style="margin-top: 2rem;">
+                <strong>💡 Why Loops?</strong> Smaller models like Llama 3.2 3B sometimes need multiple attempts to
+                properly format tool calls. The recursive loop allows the agent to self-correct and eventually produce a
+                valid response.
+            </div>
+        </div>
+
+        <!-- Learn More -->
+        <div class="section" id="learn-more">
+            <h2>📖 Further Learning Resources</h2>
+
+            <h3>Recommended Reading</h3>
+            <ul>
+                <li><strong>LangChain Agents:</strong> <a href="https://python.langchain.com/docs/modules/agents/"
+                        target="_blank" style="color: var(--primary);">python.langchain.com/docs/modules/agents</a></li>
+                <li><strong>OpenAI Function Calling:</strong> <a
+                        href="https://platform.openai.com/docs/guides/function-calling" target="_blank"
+                        style="color: var(--primary);">platform.openai.com/docs/guides/function-calling</a></li>
+                <li><strong>Anthropic Tool Use:</strong> <a href="https://docs.anthropic.com/claude/docs/tool-use"
+                        target="_blank" style="color: var(--primary);">docs.anthropic.com/claude/docs/tool-use</a></li>
+                <li><strong>MCP Specification:</strong> <a href="https://modelcontextprotocol.io" target="_blank"
+                        style="color: var(--primary);">modelcontextprotocol.io</a></li>
+            </ul>
+
+            <h3>Experiment Ideas</h3>
+            <ol>
+                <li><strong>Add New Tools:</strong> Create a <span class="inline-code">export_to_excel()</span> tool
+                </li>
+                <li><strong>Multi-Agent System:</strong> Add a "Budget Advisor" agent that analyzes spending patterns
+                </li>
+                <li><strong>Memory:</strong> Implement conversation history storage</li>
+                <li><strong>Streaming:</strong> Stream LLM responses token-by-token</li>
+                <li><strong>Voice Interface:</strong> Add speech-to-text input</li>
+            </ol>
+
+            <h3>Key Takeaways</h3>
+            <div class="learning-box">
+                <ul style="margin: 0;">
+                    <li>Agents = LLMs + Tools + Reasoning Loop</li>
+                    <li>Tool calling requires structured JSON schemas</li>
+                    <li>MCP standardizes tool interfaces</li>
+                    <li>Local models can be powerful agents with proper prompting</li>
+                    <li>Recursive loops handle multi-turn reasoning</li>
+                </ul>
+            </div>
+        </div>
+
+        <a href="index.html" class="back-link">← Back to Application</a>
+    </div>
+</body>
+
+</html>

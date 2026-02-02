@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💳 Agentic Analyst - AI Financial Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>💳 Agentic Analyst</h1>
+            <p>Your Private, Local-First Financial Assistant</p>
+            <a href="docs.html" target="_blank" class="docs-link">View Architecture Docs ↗</a>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <!-- Upload Section -->
+            <section class="upload-section glass-card">
+                <h3 style="margin-top: 0;">📁 Upload Statements</h3>
+                <input type="password" id="pdf-password" class="pdf-password" placeholder="PDF Password (if encrypted)">
+                <div class="upload-box" id="drop-zone">
+                    <input type="file" id="file-input" accept=".csv,.pdf" multiple hidden>
+                    <div class="icon">📂</div>
+                    <p>Drag & Drop your CSV or PDF Statement here</p>
+                    <button id="browse-btn">Browse Files</button>
+                </div>
+                <div id="upload-status" class="status"></div>
+
+                <!-- File Preview -->
+                <div id="file-preview" class="file-preview"></div>
+            </section>
+
+            <!-- Statistics Dashboard -->
+            <section class="stats-section glass-card" id="stats-section" style="display: none;">
+                <h3 style="margin-top: 0;">📊 Overview</h3>
+                <div class="stats-grid" id="stats-grid"></div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="quick-actions glass-card">
+                <h3 style="margin-top: 0;">⚡ Quick Actions</h3>
+                <div class="action-grid">
+                    <button class="action-btn" data-query="What was my total spending?">
+                        <span>💰</span> Total Spending
+                    </button>
+                    <button class="action-btn" data-query="Show me spending by category">
+                        <span>📊</span> Category Breakdown
+                    </button>
+                    <button class="action-btn" data-query="Show me a pie chart of my spending">
+                        <span>🥧</span> Spending Chart
+                    </button>
+                    <button class="action-btn" data-query="What are my top 5 expenses?">
+                        <span>🔝</span> Top Expenses
+                    </button>
+                    <button class="action-btn debug-toggle" onclick="toggleDebugger()">
+                        <span>🐞</span> Debug Mode
+                    </button>
+                </div>
+            </section>
+
+            <!-- Debug Console -->
+            <section id="debug-console" class="glass-card debug-console hidden">
+                <div class="debug-header">
+                    <span>🐞 Brain Logs</span>
+                    <button class="close-debug" onclick="toggleDebugger()">×</button>
+                </div>
+                <div id="debug-logs" class="debug-content">
+                    <div class="debug-placeholder">Waiting for agent activity...</div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Chat Section -->
+        <section class="chat-section">
+            <div class="chat-window" id="chat-window">
+                <div class="message system">
+                    <div class="bubble">
+                        👋 Hello! Upload a statement to get started, or ask me a general question.
+                    </div>
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Ask about your spending..." disabled>
+                <button id="send-btn" disabled>Send</button>
+            </div>
+        </section>
+    </div>
+    <script src="app.js?v=3"></script>
+</body>
+
+</html>
