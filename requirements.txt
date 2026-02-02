@@ -1,0 +1,28 @@
+# Python Dependencies for Credit Card Analysis Agent
+
+# Core Framework
+fastapi==0.115.12
+uvicorn[standard]==0.34.0
+pydantic==2.10.6
+
+# LLM and AI
+llama-cpp-python==0.3.4
+
+# Data Processing
+pandas==2.2.3
+python-dateutil==2.9.0.post0
+
+# PDF Processing
+pypdf==5.1.0
+
+# Data Visualization
+matplotlib==3.10.0
+
+# HTTP Requests
+requests==2.32.3
+
+# MCP Server
+fastmcp==0.5.1
+
+# File Upload Support
+python-multipart==0.0.20
